@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thêm sản phẩm - ChieuShop</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="container topbar-inner">
+        <a class="logo" href="./index.html">Chieu<span>Shop</span></a>
+        <nav class="menu">
+          <a href="./index.html">Sản phẩm</a>
+          <a href="./create-product.html">Thêm sản phẩm</a>
+          <a href="./payments.html">Lịch sử thanh toán</a>
+        </nav>
+        <div class="actions">
+          <button id="openApiConfig" class="btn-outline" type="button">API</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container section">
+      <div class="section-head">
+        <h2>Thêm sản phẩm mới</h2>
+      </div>
+
+      <form id="createProductForm" class="create-form">
+        <div class="form-grid">
+          <input id="newTitle" type="text" placeholder="Tên sản phẩm" required />
+          <input id="newPrice" type="number" min="0" step="1000" placeholder="Giá" required />
+          <input id="newSku" type="text" placeholder="SKU (để trống sẽ tự tạo)" />
+          <select id="newCategory" required>
+            <option value="">Chọn danh mục</option>
+          </select>
+        </div>
+        <div class="inline-tools">
+          <input id="newCategoryName" type="text" placeholder="Chưa có danh mục? Nhập tên để tạo mới" />
+          <button id="createCategoryBtn" class="btn-outline" type="button">Tạo danh mục</button>
+        </div>
+        <p id="categoryStatus" class="form-status"></p>
+        <textarea id="newDescription" rows="3" placeholder="Mô tả sản phẩm"></textarea>
+        <textarea id="newImages" rows="2" placeholder="Link ảnh, ngăn cách bằng dấu phẩy"></textarea>
+        <div class="form-actions">
+          <button class="btn-primary" type="submit">Thêm sản phẩm</button>
+        </div>
+        <p id="createProductStatus" class="form-status"></p>
+      </form>
+    </main>
+
+    <div id="apiConfigModal" class="modal hidden">
+      <div class="modal-card">
+        <h3>Cấu hình API</h3>
+        <label for="apiBase">API Base URL</label>
+        <div class="modal-row">
+          <input id="apiBase" type="text" value="http://localhost:3000/api/v1" />
+          <button id="saveApiBase" class="btn-primary" type="button">Lưu</button>
+        </div>
+        <button id="closeApiConfig" class="btn-outline" type="button">Đóng</button>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+    <script src="./create-product.js"></script>
+  </body>
+</html>

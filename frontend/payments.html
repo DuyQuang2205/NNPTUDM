@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lịch sử thanh toán - ChieuShop</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="container topbar-inner">
+        <a class="logo" href="./index.html">Chieu<span>Shop</span></a>
+        <nav class="menu">
+          <a href="./index.html">Sản phẩm</a>
+          <a href="./create-product.html">Thêm sản phẩm</a>
+          <a href="./payments.html">Lịch sử thanh toán</a>
+        </nav>
+        <div class="actions">
+          <span id="userBadge" class="user-badge hidden"></span>
+          <button id="openAuth" class="btn-outline" type="button">Đăng nhập</button>
+          <button id="logoutBtn" class="btn-outline hidden" type="button">Đăng xuất</button>
+          <button id="openApiConfig" class="btn-outline" type="button">API</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container section">
+      <div class="section-head">
+        <h2>Lịch sử thanh toán</h2>
+        <div style="display: grid; grid-template-columns: auto auto auto; gap: 8px; align-items: center; margin-top: 16px;">
+          <select id="statusFilter" class="form-input">
+            <option value="">Tất cả trạng thái</option>
+            <option value="pending">Chờ xử lý</option>
+            <option value="completed">Hoàn thành</option>
+            <option value="failed">Thất bại</option>
+            <option value="refunded">Hoàn tiền</option>
+          </select>
+          <button id="refreshPayments" class="btn-outline" type="button">Tải lại</button>
+          <button id="openCreatePayment" class="btn-primary" type="button">+ Tạo thanh toán</button>
+        </div>
+      </div>
+      <div id="paymentsList" class="payments-list">
+        <p class="empty">Đăng nhập để xem lịch sử thanh toán.</p>
+      </div>
+    </main>
+
+    <div id="authModal" class="modal hidden">
+      <div class="modal-card">
+        <h3>Tài khoản</h3>
+        <form id="loginForm" class="auth-form">
+          <input id="loginUsername" type="text" placeholder="Username" required />
+          <input id="loginPassword" type="password" placeholder="Password" required />
+          <button class="btn-primary" type="submit">Đăng nhập</button>
+        </form>
+
+        <hr class="divider" />
+
+        <form id="registerForm" class="auth-form">
+          <input id="registerUsername" type="text" placeholder="Username mới" required />
+          <input id="registerEmail" type="email" placeholder="Email" required />
+          <input id="registerPassword" type="password" placeholder="Mật khẩu" required />
+          <button class="btn-outline" type="submit">Đăng ký</button>
+        </form>
+
+        <p id="authStatus" class="form-status"></p>
+        <button id="closeAuth" class="btn-outline" type="button">Đóng</button>
+      </div>
+    </div>
+
+    <div id="apiConfigModal" class="modal hidden">
+      <div class="modal-card">
+        <h3>Cấu hình API</h3>
+        <label for="apiBase">API Base URL</label>
+        <div class="modal-row">
+          <input id="apiBase" type="text" value="http://localhost:3000/api/v1" />
+          <button id="saveApiBase" class="btn-primary" type="button">Lưu</button>
+        </div>
+        <button id="closeApiConfig" class="btn-outline" type="button">Đóng</button>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- Payment Detail Modal -->
+    <div id="paymentDetailModal" class="modal hidden">
+      <div class="modal-card">
+        <h3>Chi tiết thanh toán</h3>
+        <div id="paymentDetail" class="payment-details"></div>
+        <label for="paymentStatusSelect">Cập nhật trạng thái</label>
+        <div class="modal-row">
+          <select id="paymentStatusSelect" class="form-input">
+            <option value="pending">Chờ xử lý</option>
+            <option value="completed">Hoàn thành</option>
+            <option value="failed">Thất bại</option>
+            <option value="refunded">Hoàn tiền</option>
+          </select>
+          <button id="updatePaymentStatusBtn" class="btn-primary" type="button">Cập nhật</button>
+        </div>
+        <p id="paymentDetailStatus" class="form-status"></p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px;">
+          <button id="deletePaymentBtn" class="btn-danger" type="button">Xóa</button>
+          <button id="closePaymentDetail" class="btn-outline" type="button">Đóng</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Payment Modal -->
+    <div id="createPaymentModal" class="modal hidden">
+      <div class="modal-card">
+        <h3>Tạo thanh toán mới</h3>
+        <form id="createPaymentForm" class="auth-form">
+          <label for="paymentAmount">Số tiền (đ)</label>
+          <input id="paymentAmount" type="number" placeholder="0" min="0" required />
+          
+          <label for="paymentMethod">Phương thức</label>
+          <select id="paymentMethod" class="form-input" required>
+            <option value="">Chọn phương thức</option>
+            <option value="credit_card">Thẻ tín dụng</option>
+            <option value="paypal">PayPal</option>
+            <option value="bank_transfer">Chuyển khoản</option>
+            <option value="cod">Thanh toán khi nhận hàng</option>
+          </select>
+          
+          <label for="paymentStatus">Trạng thái</label>
+          <select id="paymentStatus" class="form-input" required>
+            <option value="pending">Chờ xử lý</option>
+            <option value="completed">Hoàn thành</option>
+            <option value="failed">Thất bại</option>
+          </select>
+          
+          <button class="btn-primary" type="submit">Tạo</button>
+        </form>
+        <p id="createPaymentStatus" class="form-status"></p>
+        <button id="closeCreatePayment" class="btn-outline" type="button">Đóng</button>
+      </div>
+    </div>
+
+    <script src="./payments.js"></script>
+  </body>
+</html>

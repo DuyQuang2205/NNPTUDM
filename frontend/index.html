@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ChieuT2 Frontend</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="container topbar-inner">
+        <a class="logo" href="#">Chieu<span>Shop</span></a>
+        <nav class="menu">
+          <a href="./index.html">Sản phẩm</a>
+          <a href="./create-product.html">Thêm sản phẩm</a>
+          <a href="./payments.html">Lịch sử thanh toán</a>
+          <a href="#about">Giới thiệu</a>
+        </nav>
+        <div class="actions">
+          <span id="userBadge" class="user-badge hidden"></span>
+          <button id="openAuth" class="btn-outline" type="button">Đăng nhập</button>
+          <button id="logoutBtn" class="btn-outline hidden" type="button">Đăng xuất</button>
+          <button id="openApiConfig" class="btn-outline" type="button">API</button>
+          <button id="openCart" class="btn-cart" type="button">
+            Giỏ hàng <span id="cartCount">0</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container hero-inner">
+          <div>
+            <p class="tag">Mới ra mắt 2026</p>
+            <h1>Web bán hàng thời trang đơn giản, đẹp, dễ dùng</h1>
+            <p class="sub">
+              Khám phá sản phẩm nổi bật từ backend của bạn. Lọc theo danh mục,
+              tìm kiếm nhanh và thêm vào giỏ hàng ngay.
+            </p>
+            <a href="#products" class="btn-primary">Mua ngay</a>
+          </div>
+        </div>
+      </section>
+
+      <section id="products" class="container section">
+        <div class="section-head">
+          <h2>Sản phẩm nổi bật</h2>
+          <button id="refreshProducts" class="btn-outline" type="button">Tải lại</button>
+        </div>
+
+        <div class="filters">
+          <input id="searchInput" type="text" placeholder="Tìm theo tên sản phẩm..." />
+          <select id="categoryFilter">
+            <option value="">Tất cả danh mục</option>
+          </select>
+          <select id="sortFilter">
+            <option value="default">Sắp xếp mặc định</option>
+            <option value="price-asc">Giá tăng dần</option>
+            <option value="price-desc">Giá giảm dần</option>
+            <option value="name-asc">Tên A-Z</option>
+          </select>
+        </div>
+
+        <div id="productsGrid" class="products-grid"></div>
+        <p id="emptyState" class="empty hidden">Không có sản phẩm phù hợp.</p>
+      </section>
+
+      <section id="about" class="container section about">
+        <h3>Về ChieuShop</h3>
+        <p>
+          Frontend thuần HTML/CSS/JS, kết nối API Node.js hiện có, phù hợp để
+          demo hoặc phát triển tiếp lên React/Vue sau này.
+        </p>
+      </section>
+    </main>
+
+    <aside id="cartPanel" class="cart-panel">
+      <div class="cart-header">
+        <h3>Giỏ hàng của bạn</h3>
+        <button id="closeCart" class="icon-btn" type="button">✕</button>
+      </div>
+      <div id="cartItems" class="cart-items"></div>
+      <div class="cart-footer">
+        <label for="paymentMethod">Phương thức thanh toán</label>
+        <select id="paymentMethod">
+          <option value="cod">COD</option>
+          <option value="bank_transfer">Chuyển khoản</option>
+          <option value="credit_card">Thẻ tín dụng</option>
+          <option value="paypal">PayPal</option>
+        </select>
+        <div class="total-row">
+          <span>Tạm tính</span>
+          <strong id="cartTotal">0 đ</strong>
+        </div>
+        <button id="clearCart" class="btn-outline full" type="button">Xóa giỏ hàng</button>
+        <button id="checkoutBtn" class="btn-primary full" type="button">Thanh toán</button>
+      </div>
+    </aside>
+
+    <div id="authModal" class="modal hidden">
+      <div class="modal-card">
+        <h3>Tài khoản</h3>
+        <form id="loginForm" class="auth-form">
+          <input id="loginUsername" type="text" placeholder="Username" required />
+          <input id="loginPassword" type="password" placeholder="Password" required />
+          <button class="btn-primary" type="submit">Đăng nhập</button>
+        </form>
+
+        <hr class="divider" />
+
+        <form id="registerForm" class="auth-form">
+          <input id="registerUsername" type="text" placeholder="Username mới" required />
+          <input id="registerEmail" type="email" placeholder="Email" required />
+          <input id="registerPassword" type="password" placeholder="Mật khẩu" required />
+          <button class="btn-outline" type="submit">Đăng ký</button>
+        </form>
+
+        <p id="authStatus" class="form-status"></p>
+        <button id="closeAuth" class="btn-outline" type="button">Đóng</button>
+      </div>
+    </div>
+
+    <div id="apiConfigModal" class="modal hidden">
+      <div class="modal-card">
+        <h3>Cấu hình API</h3>
+        <label for="apiBase">API Base URL</label>
+        <div class="modal-row">
+          <input id="apiBase" type="text" value="http://localhost:3000/api/v1" />
+          <button id="saveApiBase" class="btn-primary" type="button">Lưu</button>
+        </div>
+        <button id="closeApiConfig" class="btn-outline" type="button">Đóng</button>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
