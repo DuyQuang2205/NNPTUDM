@@ -116,6 +116,10 @@ async function syncItemToServer(productId, quantity) {
 async function addToCart(productId) {
   const p = products.find((x) => x._id === productId);
   if (!p) return;
+  if (p.isOutOfStock) {
+    showToast("⚠️ Sản phẩm đã hết hàng");
+    return;
+  }
   const item = cart.find((x) => x.productId === productId);
   if (item) {
     item.quantity += 1;
@@ -167,6 +171,20 @@ function renderCart() {
     .join("");
 }
 
+function getStockBadge(product) {
+  if (!product || product.isOutOfStock || product.stockStatus === "out_of_stock") {
+    return `<span class="badge badge-off">Hết hàng</span>`;
+  }
+  if (product.stockStatus === "low_stock") {
+    return `<span class="badge badge-warn">${product.stockLabel || `Sắp hết (còn ${product.stock || 0})`}</span>`;
+  }
+  return `<span class="badge badge-ok">${product.stockLabel || `Còn hàng (${product.stock || 0})`}</span>`;
+}
+
+function isOutOfStock(product) {
+  return !product || Boolean(product.isOutOfStock || product.stockStatus === "out_of_stock");
+}
+
 function filteredProducts() {
   const keyword = searchInput.value.trim().toLowerCase();
   const selectedCategory = categoryFilter.value;
@@ -187,13 +205,18 @@ function renderProducts() {
     .map(
       (p) => `
       <article class="product-card">
-        <img class="product-thumb" src="${getImage(p)}" alt="${p.title}" />
+        <img class="product-thumb" src="${getImage(p)}" alt="${p.title}"
+          style="cursor:pointer" data-detail="${p._id}" />
         <div class="product-content">
-          <h3 class="product-title">${p.title || "Sản phẩm"}</h3>
+          <h3 class="product-title" style="cursor:pointer" data-detail="${p._id}">${p.title || "Sản phẩm"}</h3>
           <div class="meta">Danh mục: ${p.category || "Khác"}</div>
+          <div class="meta" style="margin-top:4px">${getStockBadge(p)}</div>
           <div class="price-row">
             <div class="price">${currency(p.price)}</div>
-            <button class="btn-primary" data-add="${p._id}">Thêm</button>
+            <button class="btn-primary" data-add="${p._id}"
+              ${isOutOfStock(p) ? 'disabled style="opacity:.4;cursor:not-allowed"' : ''}>
+              Thêm
+            </button>
           </div>
         </div>
       </article>
@@ -202,9 +225,155 @@ function renderProducts() {
     .join("");
 }
 
+// ── Product Detail Modal ─────────────────────────────────
+let detailProductId = null;
+
+async function openDetail(productId) {
+  const modal = document.getElementById("detailModal");
+  modal.classList.remove("hidden");
+
+  document.getElementById("detailReviewList").innerHTML = "<p class='review-empty-msg'>Đang tải...</p>";
+
+  try {
+    const detail = await request(`/products/${productId}/detail`);
+    const p = detail?.product;
+    const options = detail?.options || {};
+    const reviews = Array.isArray(detail?.reviews) ? detail.reviews : [];
+
+    if (!p) throw new Error("Không tìm thấy sản phẩm");
+
+    detailProductId = p._id;
+
+    document.getElementById("detailImg").src = getImage(p);
+    document.getElementById("detailImg").alt = p.title || "";
+    document.getElementById("detailTitle").textContent = p.title || "Sản phẩm";
+    document.getElementById("detailPrice").textContent = currency(p.price);
+    document.getElementById("detailStock").innerHTML = getStockBadge(p);
+
+    const outOfStock = isOutOfStock(p);
+    const addCartBtn = document.getElementById("detailAddCart");
+    const buyNowBtn = document.getElementById("detailBuyNow");
+    addCartBtn.disabled = outOfStock;
+    buyNowBtn.disabled = outOfStock;
+    addCartBtn.style.opacity = outOfStock ? ".4" : "";
+    buyNowBtn.style.opacity = outOfStock ? ".4" : "";
+    addCartBtn.style.cursor = outOfStock ? "not-allowed" : "";
+    buyNowBtn.style.cursor = outOfStock ? "not-allowed" : "";
+
+    document.getElementById("accDesc").textContent = p.description || "Không có mô tả.";
+
+    const colorsDiv = document.getElementById("detailColors");
+    const colorName = document.getElementById("detailColorName");
+    const colors = Array.isArray(options.colors) ? options.colors : [];
+    colorsDiv.innerHTML = colors.map((c) =>
+      `<button class="detail-color-btn" title="${c.name}" data-cname="${c.name}"
+        style="background:${c.hexCode};border-color:${c.hexCode};"></button>`
+    ).join("");
+    colorName.textContent = "";
+    colorsDiv.querySelectorAll(".detail-color-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        colorsDiv.querySelectorAll(".detail-color-btn").forEach((b) => b.classList.remove("selected"));
+        btn.classList.add("selected");
+        colorName.textContent = btn.dataset.cname;
+      });
+    });
+
+    const sizesDiv = document.getElementById("detailSizes");
+    const sizes = Array.isArray(options.sizes) ? options.sizes : [];
+    sizesDiv.innerHTML = sizes.map((s) =>
+      `<button class="detail-size-btn" data-size="${s.name}">${s.name}</button>`
+    ).join("");
+    sizesDiv.querySelectorAll(".detail-size-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        sizesDiv.querySelectorAll(".detail-size-btn").forEach((b) => b.classList.remove("selected"));
+        btn.classList.add("selected");
+      });
+    });
+
+    const materials = Array.isArray(options.materials) ? options.materials : [];
+    const matLines = materials.map((m) => `${m.percentage ?? ""}% ${m.name}${m.care ? " – " + m.care : ""}`);
+    document.getElementById("accMat").innerHTML = matLines.length
+      ? matLines.map((l) => `<div>${l}</div>`).join("")
+      : "Không có thông tin chất liệu.";
+
+    renderDetailReviews(reviews);
+  } catch (error) {
+    document.getElementById("detailReviewList").innerHTML = "<p class='review-empty-msg'>Không tải được chi tiết sản phẩm.</p>";
+    showToast(`Lỗi tải chi tiết: ${error.message}`);
+  }
+}
+
+function renderDetailReviews(reviews) {
+  const list = document.getElementById("detailReviewList");
+  if (!Array.isArray(reviews) || reviews.length === 0) {
+    list.innerHTML = "<p class='review-empty-msg'>Chưa có đánh giá nào.</p>";
+    return;
+  }
+  list.innerHTML = reviews.map((r) => {
+    const date = r.createdAt ? new Date(r.createdAt).toLocaleDateString("vi-VN") : "";
+    return `
+      <div class="review-card">
+        <div class="review-top">
+          <div class="stars">${renderStars(r.rating)}</div>
+          <span class="review-meta">${date}</span>
+        </div>
+        <strong>${r.title || ""}</strong>
+        <p>${r.comment || ""}</p>
+      </div>`;
+  }).join("");
+}
+
+// Accordion toggle
+document.querySelectorAll(".accordion-header").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const body = document.getElementById(btn.dataset.acc);
+    const icon = btn.querySelector(".acc-icon");
+    const isOpen = !body.classList.contains("hidden");
+    body.classList.toggle("hidden", isOpen);
+    if (icon) icon.textContent = isOpen ? "+" : "−";
+  });
+});
+
+// Close detail modal
+document.getElementById("closeDetail").addEventListener("click", () =>
+  document.getElementById("detailModal").classList.add("hidden")
+);
+document.getElementById("detailModal").addEventListener("click", (e) => {
+  if (e.target === document.getElementById("detailModal"))
+    document.getElementById("detailModal").classList.add("hidden");
+});
+
+// Add to cart from detail modal
+document.getElementById("detailAddCart").addEventListener("click", async () => {
+  if (!detailProductId) return;
+  try {
+    await addToCart(detailProductId);
+    document.getElementById("detailModal").classList.add("hidden");
+  } catch (e) { showToast("Lỗi: " + e.message); }
+});
+
+// Buy now from detail modal
+document.getElementById("detailBuyNow").addEventListener("click", async () => {
+  if (!detailProductId) return;
+  try {
+    await addToCart(detailProductId);
+    document.getElementById("detailModal").classList.add("hidden");
+    cartPanel.classList.add("open");
+  } catch (e) { showToast("Lỗi: " + e.message); }
+});
+
+function renderStars(rating) {
+  return Array.from({ length: 5 }, (_, i) =>
+    `<span class="${i < rating ? 'star-filled' : 'star-empty'}">&#9733;</span>`
+  ).join("");
+}
+
 async function loadData() {
   try {
-    const [categoryData, productData] = await Promise.all([request("/categories"), request("/products")]);
+    const [categoryData, productData] = await Promise.all([
+      request("/categories"),
+      request("/products"),
+    ]);
     const categories = Array.isArray(categoryData) ? categoryData : [];
     products = Array.isArray(productData) ? productData : [];
     categoryFilter.innerHTML = `<option value="">Tất cả danh mục</option>${categories
@@ -325,12 +494,19 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
 });
 
 productsGrid.addEventListener("click", async (e) => {
-  const btn = e.target.closest("[data-add]");
-  if (!btn) return;
-  try {
-    await addToCart(btn.getAttribute("data-add"));
-  } catch (error) {
-    showToast(`Thêm giỏ hàng lỗi: ${error.message}`);
+  const addBtn = e.target.closest("[data-add]");
+  if (addBtn) {
+    try {
+      await addToCart(addBtn.getAttribute("data-add"));
+    } catch (error) {
+      showToast(`Thêm giỏ hàng lỗi: ${error.message}`);
+    }
+    return;
+  }
+
+  const detailBtn = e.target.closest("[data-detail]");
+  if (detailBtn) {
+    await openDetail(detailBtn.getAttribute("data-detail"));
   }
 });
 

@@ -25,7 +25,6 @@ module.exports = {
     let query = {
       product: productId,
       isDeleted: false,
-      status: "approved",
       ...filters,
     };
     return await reviewModel
@@ -35,8 +34,7 @@ module.exports = {
   },
 
   GetAllReviews: async function (filters = {}, admin = false) {
-    let statusFilter = admin ? {} : { status: "approved" };
-    let query = { isDeleted: false, ...statusFilter, ...filters };
+    let query = { isDeleted: false, ...filters };
     return await reviewModel
       .find(query)
       .populate(["product", "user"])

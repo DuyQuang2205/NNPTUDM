@@ -98,6 +98,83 @@
       </div>
     </aside>
 
+    <!-- Product Detail Modal -->
+    <div id="detailModal" class="modal modal-detail hidden">
+      <div class="modal-card">
+        <!-- LEFT: Image -->
+        <div class="detail-img-wrap">
+          <img id="detailImg" src="" alt="" />
+        </div>
+        <!-- RIGHT: Info -->
+        <div class="detail-body">
+          <div class="detail-close-row">
+            <button id="closeDetail" class="icon-btn" type="button">✕</button>
+          </div>
+          <h2 id="detailTitle" class="detail-title"></h2>
+          <div id="detailPrice" class="detail-price"></div>
+          <div id="detailStock"></div>
+
+          <!-- Colors -->
+          <div id="detailColorsWrap">
+            <div class="detail-section-label">Màu sắc</div>
+            <div id="detailColors" class="detail-colors"></div>
+            <div id="detailColorName" class="detail-color-name"></div>
+          </div>
+
+          <!-- Sizes -->
+          <div id="detailSizesWrap">
+            <div class="detail-section-label">Kích thước</div>
+            <div id="detailSizes" class="detail-sizes"></div>
+          </div>
+
+          <!-- CTA -->
+          <div class="detail-cta">
+            <button id="detailAddCart" class="btn-cart-full" type="button">THÊM VÀO GIỎ HÀNG</button>
+            <button id="detailBuyNow" class="btn-buy-full" type="button">MUA NGAY</button>
+          </div>
+
+          <!-- Accordion: Description -->
+          <div class="accordion-item">
+            <button class="accordion-header" data-acc="accDesc">
+              MÔ TẢ <span class="acc-icon">+</span>
+            </button>
+            <div id="accDesc" class="accordion-body hidden"></div>
+          </div>
+
+          <!-- Accordion: Materials -->
+          <div class="accordion-item">
+            <button class="accordion-header" data-acc="accMat">
+              CHẤT LIỆU & BẢO QUẢN <span class="acc-icon">+</span>
+            </button>
+            <div id="accMat" class="accordion-body hidden"></div>
+          </div>
+
+          <!-- Accordion: Reviews -->
+          <div class="accordion-item">
+            <button class="accordion-header" data-acc="accReviews">
+              ĐÁNH GIÁ <span class="acc-icon" id="accReviewsIcon">+</span>
+            </button>
+            <div id="accReviews" class="accordion-body hidden">
+              <div id="detailReviewList" class="review-list" style="max-height:260px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div id="reviewModal" class="modal modal-large hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="reviewModalTitle">Đánh giá sản phẩm</h3>
+          <button id="closeReview" class="icon-btn" type="button">✕</button>
+        </div>
+        <div id="reviewList" class="review-list">
+          <p class="review-empty-msg">Đang tải...</p>
+        </div>
+      </div>
+    </div>
+
     <div id="authModal" class="modal hidden">
       <div class="modal-card">
         <h3>Tài khoản</h3>

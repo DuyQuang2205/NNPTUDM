@@ -1,30 +1,21 @@
-var express = require('express');
+var express = require("express");
 var router = express.Router();
-let inventoryModel = require('../schemas/inventories')
+let inventoryController = require("../controllers/inventories");
 
-router.get('/', async function (req, res, next) {
-    let inventories = await inventoryModel.find({
-    }).populate({
-        path: 'product',
-        select: 'title price'
-    })
-    res.send(inventories)
-})
-
-router.put('/:id', async function(req, res, next) {
+router.get("/", async function (req, res, next) {
     try {
-        const inventoryId = req.params.id;
-        const updateData = req.body;
+        let inventories = await inventoryController.GetAllInventories();
+        res.send(inventories);
+    } catch (error) {
+        res.status(400).send({ message: error.message });
+    }
+});
 
-        // Prevent product field from being updated
-        if (updateData.product) {
-            delete updateData.product;
-        }
-
-        const updatedInventory = await inventoryModel.findByIdAndUpdate(
-            inventoryId,
-            updateData,
-            { new: true }
+router.put("/:id", async function (req, res, next) {
+    try {
+        const updatedInventory = await inventoryController.UpdateInventory(
+            req.params.id,
+            req.body,
         );
 
         if (!updatedInventory) {
@@ -37,37 +28,18 @@ router.put('/:id', async function(req, res, next) {
     }
 });
 
-router.post('/', async function (req, res, next) {
+router.post("/", async function (req, res, next) {
     try {
-        const { product, quantity } = req.body;
-
-        // Check if inventory for this product already exists
-        const existingInventory = await inventoryModel.findOne({ product: product });
-        if (existingInventory) {
-            return res.status(400).send({ message: 'Inventory for this product already exists.' });
-        }
-
-        const newInventory = new inventoryModel({
-            product: product,
-            stock: quantity || 0
-        });
-
-        await newInventory.save();
+        const newInventory = await inventoryController.CreateInventory(req.body);
         res.status(201).send(newInventory);
     } catch (error) {
         res.status(400).send({ message: error.message });
     }
 });
 
-router.delete('/:id', async function(req, res, next) {
+router.delete("/:id", async function (req, res, next) {
     try {
-        const inventoryId = req.params.id;
-
-        const deletedInventory = await inventoryModel.findByIdAndUpdate(
-            inventoryId,
-            { isDeleted: true },
-            { new: true }
-        );
+        const deletedInventory = await inventoryController.DeleteInventory(req.params.id);
 
         if (!deletedInventory) {
             return res.status(404).send({ message: "Inventory not found" });
@@ -79,43 +51,28 @@ router.delete('/:id', async function(req, res, next) {
     }
 });
 
-router.post('/increase-stock', async function (req, res, next) {
-    let { product, quantity } = req.body;
-    let getProduct = await inventoryModel.findOne({
-        product: product
-    })
-    console.log(getProduct);
-    if (getProduct) {
-        getProduct.stock += quantity;
-        await getProduct.save()
-        res.send(getProduct)
-    } else {
-        res.status(404).send({
-            message: "Product not found"
-        })
-    }
-
-})
-router.post('/decrease-stock', async function (req, res, next) {
-    let { product, quantity } = req.body;
-    let getProduct = await inventoryModel.findOne({
-        product: product
-    })
-    if (getProduct) {
-        if (getProduct.stock >= quantity) {
-            getProduct.stock -= quantity;
-            await getProduct.save()
-            res.send(getProduct)
-        } else {
-            res.status(404).send({
-                message: "Product khong du so luong"
-            })
+router.post("/increase-stock", async function (req, res, next) {
+    try {
+        let updated = await inventoryController.IncreaseStock(req.body);
+        if (!updated) {
+            return res.status(404).send({ message: "Product not found" });
         }
-    } else {
-        res.status(404).send({
-            message: "Product not found"
-        })
+        res.send(updated);
+    } catch (error) {
+        res.status(400).send({ message: error.message });
     }
+});
 
-})
+router.post("/decrease-stock", async function (req, res, next) {
+    try {
+        let updated = await inventoryController.DecreaseStock(req.body);
+        if (!updated) {
+            return res.status(404).send({ message: "Product not found" });
+        }
+        res.send(updated);
+    } catch (error) {
+        const status = error.message === "Product khong du so luong" ? 400 : 500;
+        res.status(status).send({ message: error.message });
+    }
+});
 module.exports = router;

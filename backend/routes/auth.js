@@ -11,15 +11,20 @@ let mailHandler = require('../utils/sendMailHandler')
 /* GET home page. */
 //localhost:3000
 router.post('/register', async function (req, res, next) {
-    let newUser = await userController.CreateAnUser(
-        req.body.username,
-        req.body.password,
-        req.body.email,
-        "69a5462f086d74c9e772b804"
-    )
-    res.send({
-        message: "dang ki thanh cong"
-    })
+  try {
+    await userController.CreateAnUser(
+      req.body.username,
+      req.body.password,
+      req.body.email,
+      "69a5462f086d74c9e772b804"
+    );
+    res.send({ message: "dang ki thanh cong" });
+  } catch (error) {
+    if (error?.code === 11000) {
+      return res.status(409).send({ message: "username hoặc email đã tồn tại" });
+    }
+    return res.status(400).send({ message: error.message });
+  }
 });
 router.post('/login', async function (req, res, next) {
     let result = await userController.QueryByUserNameAndPassword(

@@ -1,12 +1,12 @@
 var express = require('express');
 var router = express.Router();
-let paymentModel = require('../schemas/payments');
+let paymentController = require('../controllers/payments');
 let { checkLogin } = require('../utils/authHandler.js');
 
 // GET all payments for the logged-in user
 router.get('/', checkLogin, async (req, res) => {
     try {
-        const payments = await paymentModel.find({ user: req.userId }).populate('user', 'name email');
+        const payments = await paymentController.GetPaymentsByUser(req.userId);
         res.send(payments);
     } catch (error) {
         res.status(500).send({ message: 'Error fetching payments', error });
@@ -16,7 +16,7 @@ router.get('/', checkLogin, async (req, res) => {
 // GET a specific payment by ID
 router.get('/:id', checkLogin, async (req, res) => {
     try {
-        const payment = await paymentModel.findOne({ _id: req.params.id, user: req.userId }).populate('user', 'name email');
+        const payment = await paymentController.GetPaymentById(req.params.id, req.userId);
         if (!payment) {
             return res.status(404).send({ message: 'Payment not found' });
         }
@@ -29,13 +29,8 @@ router.get('/:id', checkLogin, async (req, res) => {
 // POST a new payment
 router.post('/', checkLogin, async (req, res) => {
     try {
-        const payment = new paymentModel({
-            ...req.body,
-            user: req.userId
-        });
-        await payment.save();
-        const populatedPayment = await payment.populate('user', 'name email');
-        res.status(201).send(populatedPayment);
+        const payment = await paymentController.CreatePayment(req.body, req.userId);
+        res.status(201).send(payment);
     } catch (error) {
         res.status(400).send({ message: 'Error creating payment', error });
     }
@@ -44,11 +39,11 @@ router.post('/', checkLogin, async (req, res) => {
 // PUT to update a payment by ID
 router.put('/:id', checkLogin, async (req, res) => {
     try {
-        const payment = await paymentModel.findOneAndUpdate(
-            { _id: req.params.id, user: req.userId },
+        const payment = await paymentController.UpdatePayment(
+            req.params.id,
             req.body,
-            { new: true, runValidators: true }
-        ).populate('user', 'name email');
+            req.userId
+        );
 
         if (!payment) {
             return res.status(404).send({ message: 'Payment not found' });
@@ -62,7 +57,7 @@ router.put('/:id', checkLogin, async (req, res) => {
 // DELETE a payment by ID
 router.delete('/:id', checkLogin, async (req, res) => {
     try {
-        const payment = await paymentModel.findOneAndDelete({ _id: req.params.id, user: req.userId });
+        const payment = await paymentController.DeletePayment(req.params.id, req.userId);
         if (!payment) {
             return res.status(404).send({ message: 'Payment not found' });
         }

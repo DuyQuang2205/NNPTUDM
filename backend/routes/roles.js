@@ -1,19 +1,18 @@
 var express = require("express");
 var router = express.Router();
-
-let roleModel = require("../schemas/roles");
+let roleController = require("../controllers/roles");
 
 
 router.get("/", async function (req, res, next) {
-    let roles = await roleModel.find({ isDeleted: false });
+    let roles = await roleController.GetAllRoles();
     res.send(roles);
 });
 
 
 router.get("/:id", async function (req, res, next) {
     try {
-        let result = await roleModel.find({ _id: req.params.id, isDeleted: false });
-        if (result.length > 0) {
+        let result = await roleController.GetRoleById(req.params.id);
+        if (result) {
             res.send(result);
         }
         else {
@@ -27,11 +26,7 @@ router.get("/:id", async function (req, res, next) {
 
 router.post("/", async function (req, res, next) {
     try {
-        let newItem = new roleModel({
-            name: req.body.name,
-            description: req.body.description
-        });
-        await newItem.save();
+        let newItem = await roleController.CreateRole(req.body);
         res.send(newItem);
     } catch (err) {
         res.status(400).send({ message: err.message });
@@ -40,8 +35,7 @@ router.post("/", async function (req, res, next) {
 
 router.put("/:id", async function (req, res, next) {
     try {
-        let id = req.params.id;
-        let updatedItem = await roleModel.findByIdAndUpdate(id, req.body, { new: true });
+        let updatedItem = await roleController.UpdateRole(req.params.id, req.body);
         if (!updatedItem) {
             return res.status(404).send({ message: "id not found" });
         }
@@ -53,12 +47,7 @@ router.put("/:id", async function (req, res, next) {
 
 router.delete("/:id", async function (req, res, next) {
     try {
-        let id = req.params.id;
-        let updatedItem = await roleModel.findByIdAndUpdate(
-            id,
-            { isDeleted: true },
-            { new: true }
-        );
+        let updatedItem = await roleController.DeleteRole(req.params.id);
         if (!updatedItem) {
             return res.status(404).send({ message: "id not found" });
         }
